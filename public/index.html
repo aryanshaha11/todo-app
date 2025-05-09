@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+
+    <div>
+        <h2>Signup</h2>
+        <label for="">first name</label><br>
+        <input id="user-firstname" type="text" required></br>
+        <label for="">last name</label><br>
+        <input id="user-lastname" type="text" required></br>
+        <label for="">Enter your email</label><br>
+        <input id="signup-email" type="text" required></br>
+        <label for="">Enter your password</label><br>
+        <input id="signup-password" type="text" required></br>
+
+        <button onclick="signup()">Signup</button>
+    </div>
+
+    <div>
+        <a href="./signin.html">Already signed-up</a>
+    </div>
+
+</body>
+<script>
+    async function signup() {
+        const email = document.getElementById("signup-email").value;
+        const password = document.getElementById("signup-password").value;
+        const firstname = document.getElementById("user-firstname").value;
+        const lastname = document.getElementById("user-lastname").value;
+
+        const response = await axios.post("http://localhost:3000/signup", {
+            firstname: firstname,
+            lastname: lastname,
+            email: email,
+            password: password
+        })
+
+        if (response.data.error) {
+            alert(response.data.message)
+        } else {
+            alert("You are signed up successfully")
+            window.location.href = "/signin.html"
+
+        }
+    }
+</script>
+
+</html>

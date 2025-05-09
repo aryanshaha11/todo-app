@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <input id="createTodo" type="text" placeholder="Write a todo...">
+    <input id="due" type="text" placeholder="Due AT">
+    <button onclick="createTodo()">Create Todo</button>
+
+    <div id="listOfTodos">
+
+    </div>
+
+
+</body>
+
+<script>
+
+    document.addEventListener("DOMContentLoaded", function () {
+        axios.get("http://localhost:3000/todos", {
+            headers: {
+                token: localStorage.getItem("token")
+            }
+        }).then((res) => {
+            const todos = res.data.todos;
+            todos.forEach(todoObj => {
+                addTodoToUI(todoObj._id, todoObj.title, todoObj.done)
+
+            });
+        })
+
+    })
+
+    async function createTodo() {
+        const todoInput = document.getElementById("createTodo")
+        const dueInput = document.getElementById("due")
+        const todo = todoInput.value.trim()
+        const due = dueInput.value.trim()
+
+        await axios.post(
+            "http://localhost:3000/todo",
+            {
+                title: todo,
+                dueAt: due
+            },
+            {
+                headers: {
+                    token: localStorage.getItem("token"),
+                },
+            }
+        ).then((res) => {
+            const newTodo = res.data;
+            addTodoToUI(newTodo.id, newTodo.title)
+            todoInput.value = ""
+            dueInput.value = ""
+        })
+            .catch((err) => {
+                console.log(err)
+            })
+    }
+
+    function addTodoToUI(id, text, done = false) {
+        const listDiv = document.getElementById("listOfTodos")
+
+        const todoItem = document.createElement("div")
+        todoItem.setAttribute("data-id", id);
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = done;
+        checkbox.onchange = () => toggleDoneStatus(id, checkbox.checked);
+
+        const span = document.createElement("span");
+        span.innerHTML = text
+
+        const delButton = document.createElement("button");
+        delButton.innerHTML = "Delete"
+        delButton.onclick = () => deleteTodo(id, span)
+
+        const editButton = document.createElement("button")
+        editButton.innerHTML = "Edit"
+        editButton.onclick = () => editTodo(id, span)
+
+        todoItem.appendChild(checkbox)
+        todoItem.appendChild(span);
+        todoItem.appendChild(delButton);
+        todoItem.appendChild(editButton);
+
+
+        listDiv.appendChild(todoItem);
+
+    }
+
+
+    function deleteTodo(id, spanElement) {
+
+        const data = spanElement.innerText
+        axios.delete(`http://localhost:3000/todo/${id}`,
+            {
+                headers: {
+                    token: localStorage.getItem("token")
+                }
+            }
+        ).then(() => {
+            spanElement.parentElement.remove()
+
+        }).catch((err) => {
+            console.log(err)
+        })
+
+    }
+
+    function editTodo(id, spanElement) {
+
+        const newText = prompt("Write the updated todo : ", spanElement.innerText)
+
+        axios.put(`http://localhost:3000/todo/${id}`, {
+            updatedText: newText // body
+        }, {
+            headers: {
+                token: localStorage.getItem("token")
+            }
+        }
+        ).then(() => {
+            spanElement.innerHTML = newText
+        }).catch((err) => {
+            console.log(err)
+        })
+
+    }
+
+
+    function toggleDoneStatus(id, doneStatus) {
+
+
+        axios.put(`http://localhost:3000/todo/${id}/done`, {
+            done: doneStatus
+        },
+            {
+                headers: {
+                    token: localStorage.getItem("token")
+                }
+            }).then(res => {
+                console.log("Status updated: ", res.data.message)
+            }).catch(err => {
+                console.log("Error updating status:", err);
+            })
+    }
+</script>
+
+</html>
